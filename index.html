@@ -76,7 +76,7 @@ header{text-align:center; padding:14px 0 10px; position:relative}
 .coast{fill:none; stroke:#4A5C7A; stroke-width:1.1; vector-effect:non-scaling-stroke; opacity:0; transition:opacity 1.1s ease}
 .coast.show{opacity:.75}
 .grat{stroke:#39496460; stroke-width:1; vector-effect:non-scaling-stroke}
-.cap-star{fill:#FFFFFF; stroke:var(--ink); stroke-width:1.2; opacity:0; transition:opacity .6s}
+.cap-star{fill:var(--vellum); stroke:var(--ink); stroke-width:1.4; vector-effect:non-scaling-stroke; opacity:0; transition:opacity .6s}
 .cap-star.show{opacity:1}
 #map.zoomable{cursor:grab; touch-action:none}
 #map.zoomable:active{cursor:grabbing}
@@ -235,7 +235,7 @@ header{text-align:center; padding:14px 0 10px; position:relative}
     <div class="k">After every guess</div>
     <div class="legend">
       <span>%</span><span>How much of your guess's territory overlaps the answer's</span>
-      <span>⏪ ⏩</span><span>How many years earlier or later the answer flourished — ⏳ means they coexisted</span>
+      <span>⏪ ⏩</span><span>How many years earlier or later the answer flourished — ⏳ shows how many years the two coexisted</span>
       <span>↗ km</span><span>Distance and direction from your guess's heartland to the answer's</span>
     </div>
     <div class="k">Hints unlock as you go</div>
@@ -590,8 +590,8 @@ function renderMap(){
   }
   s+=`<path id="terr" class="terr" d="${d}"/>`;
   // capital star (hidden until hint)
-  const kx=X(p.capital.lon), ky=Y(p.capital.lat), r=Math.max(1.2,Math.min(vw,vh)*.028);
-  s+=`<path id="capstar" class="cap-star" d="M ${kx} ${ky-r} L ${kx+r*.35} ${ky-r*.35} L ${kx+r} ${ky} L ${kx+r*.35} ${ky+r*.35} L ${kx} ${ky+r} L ${kx-r*.35} ${ky+r*.35} L ${kx-r} ${ky} L ${kx-r*.35} ${ky-r*.35} Z"/>`;
+  const kx=X(p.capital.lon), ky=Y(p.capital.lat), r=0.9; // fixed world-scale symbol: ~1.8° tall on every plate
+  s+=`<path id="capstar" class="cap-star" d="${starPath(kx,ky,r)}"/>`;
   mapSvg.innerHTML=s;
   document.getElementById("plate-label").textContent =
     mode==="daily" ? `PLATE No. ${todayNo}` : "PRACTICE PLATE";
@@ -611,6 +611,9 @@ function syncMapExtras(){
 /* ---------- zoom & pan (always available) ---------- */
 let MAPT=null, VIEW=null;
 const zoomOn=()=>true;
+function starPath(kx,ky,r){
+  return `M ${kx} ${ky-r} L ${kx+r*.35} ${ky-r*.35} L ${kx+r} ${ky} L ${kx+r*.35} ${ky+r*.35} L ${kx} ${ky+r} L ${kx-r*.35} ${ky+r*.35} L ${kx-r} ${ky} L ${kx-r*.35} ${ky-r*.35} Z`;
+}
 function applyView(){
   if(!VIEW) return;
   mapSvg.setAttribute("viewBox",`${VIEW.x} ${VIEW.y} ${VIEW.w} ${VIEW.h}`);
@@ -676,8 +679,8 @@ function renderHints(){
   const st=S(), wrong=st.guesses.filter(g=>g.id!==st.answer.id).length;
   const h=document.getElementById("hints");
   const items=[
-    {at:2, locked:"✦ capital · after guess 2", open:"✦ capital marked on map"},
-    {at:3, locked:"capital name · after guess 3", open:"capital: "+st.answer.capital.n},
+    {at:2, locked:"✦ capital · after guess 2", open:"✦ capital: "+st.answer.capital.n},
+    {at:3, locked:"years · after guess 3", open:"flourished "+fmtYear(st.answer.start)+" – "+fmtYear(st.answer.end)},
     {at:4, locked:"ruler · after guess 4", open:"ruled by "+st.answer.leader},
     {at:5, locked:"initial · after guess 5", open:"begins with “"+st.answer.name[0]+"”"},
   ];
@@ -703,7 +706,10 @@ function guessRow(g){
   const oc=ovClass(pct);
   const overlapEras = g.start<=ans.end && ans.start<=g.end;
   let timeHtml;
-  if(overlapEras) timeHtml=`<span class="pill ov-3">⏳ same era</span>`;
+  if(overlapEras){
+    const shared=Math.max(1, Math.min(g.end,ans.end)-Math.max(g.start,ans.start));
+    timeHtml=`<span class="pill ov-3">⏳ ${fmtYrs(shared)} shared</span>`;
+  }
   else{
     const later = ans.start>g.end;
     const gap = later? ans.start-g.end : g.start-ans.end;
@@ -810,7 +816,7 @@ function renderReveal(){
     <div class="dates">${fmtYear(a.start)} – ${fmtYear(a.end)} · drawn at its extent of ${fmtYear(a.peak)}</div>
     <div class="factrow">
       <span class="fact">capital <b>${a.capital.n}</b></span>
-      <span class="fact">era <b>${a.era}</b></span>
+      <span class="fact">era <b>${a.era}</b></span>\n      <span class="fact">ruler <b>${a.leader}</b></span>
       <span class="fact">area <b>≈ ${fmtArea(areaKm2(a))}</b></span>
       <span class="fact">endured <b>${a.end-a.start} years</b></span>
     </div>
@@ -912,4 +918,3 @@ if(typeof location!=="undefined" && location.hash==="#test") runSelfTest();
 </script>
 </body>
 </html>
-
