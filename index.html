@@ -836,7 +836,7 @@ function share(){
     const t=overlapEras?"⏳":(a.start>g.end?"⏩":"⏪");
     return OV_EMOJI[ovClass(pct)]+" "+t+" "+bearingArrow(centroidOf(g),centroidOf(a));
   });
-  const txt=`IMPERIA — Plate No. ${todayNo} ${st.won?st.guesses.length:"X"}/${MAXG}\n${lines.join("\n")}`;
+  const txt=`IMPERIA — Plate No. ${todayNo} ${st.won?st.guesses.length:"X"}/${MAXG}\n${lines.join("\n")}\nhttps://roellkejon-lang.github.io/Imperia/`;
   (navigator.clipboard?.writeText(txt)||Promise.reject()).then(
     ()=>toast("Result copied — go plant your flag"),
     ()=>toast(txt.replace(/\n/g,"  ")));
@@ -912,4 +912,3 @@ if(typeof location!=="undefined" && location.hash==="#test") runSelfTest();
 </script>
 </body>
 </html>
-
